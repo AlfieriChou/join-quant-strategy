@@ -38,15 +38,15 @@ def initialize(context):
 # 全局变量设置
 def set_params(context):
   g.stock_list = []  # 股票池
-  g.maxnum = 5# 最大持仓数
+  g.maxnum = 5  # 最大持仓数
   g.lower = -2  # 下限
-  g.upper = 1  # 上限
+  g.upper = 1   # 上限
   g.stocks_num = 1
   g.zscore_window = 60  # zscore窗口
   g.ma_window = 20  # 均线窗口
   log.set_level('order', 'error')
   g.year = 1
-  g.stocks =[]
+  g.stocks = []
   g.buy_mouth = pd.DataFrame(columns = ['date'])
 
 # 获取当天买卖股票
@@ -57,7 +57,7 @@ def get_buy_sell(context):
   
   data = get_current_data()  # 当前时间数据
   buy, sell = [], []
-  if len(context.portfolio.positions)< g.maxnum:
+  if len(context.portfolio.positions) < g.maxnum:
     log.info('buy_stocklist',len(list(g.buy_mouth.index)))
   
   hold = context.portfolio.positions.keys()    
@@ -69,7 +69,7 @@ def get_buy_sell(context):
       single_df.close,
       window = g.ma_window
     ).mean()  # 均线
-    single_df.dropna(inplace=True)
+    single_df.dropna(inplace = True)
     single_df['sub'] = single_df.close - single_df.ma  # 对差值进行回归
     
     zscore_mean = single_df['sub'].mean();
@@ -139,14 +139,16 @@ def get_factor_filter_list(context, stock_list, jqfactor):
   score_list = get_factor_values(
     stock_list,
     jqfactor,
-    end_date=yesterday,
-    count=1
-  )[jqfactor].iloc[0].tolist()
+    end_date = yesterday,
+    count = 1
+  )[jqfactor]
+    .iloc[0]
+    .tolist()
   df = pd.DataFrame(columns=['code', 'score'])
   df['code'] = stock_list
   df['score'] = score_list
   df = df.dropna()
-  df = df[df['score']>0]
+  df = df[df['score'] > 0]
   # df.sort_values(by='score', ascending=sort, inplace=True)
   filter_list = list(df.code)
   return filter_list
@@ -177,10 +179,10 @@ def market_open(context):
   print('buy: %d  sell: %d  hold: %d' % (len(g.buy), len(g.sell), len(context.portfolio.positions)))
 
 def filter_stock(stock_pool,context):
-  stocks =[]
+  stocks = []
   for st in stock_pool:
     if not st.startswith('300') and not st.startswith('688'):
-      stn = get_security_info(st,context.current_dt)
+      stn = get_security_info(st, context.current_dt)
       if not 'ST' in stn.display_name and not '*' in stn.display_name and not '*' in stn.display_name:
         stocks.append(st)
   return stocks
