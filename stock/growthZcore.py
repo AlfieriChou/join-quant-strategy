@@ -141,9 +141,7 @@ def get_factor_filter_list(context, stock_list, jqfactor):
     jqfactor,
     end_date = yesterday,
     count = 1
-  )[jqfactor]
-    .iloc[0]
-    .tolist()
+  )[jqfactor].iloc[0].tolist()
   df = pd.DataFrame(columns=['code', 'score'])
   df['code'] = stock_list
   df['score'] = score_list
@@ -177,6 +175,10 @@ def market_open(context):
       else:
         break
   print('buy: %d  sell: %d  hold: %d' % (len(g.buy), len(g.sell), len(context.portfolio.positions)))
+  if len(g.buy) > 0:
+    log.info('「买入股票」：' + str(g.buy))
+  if len(g.sell) > 0:
+    log.info('「卖入股票」：' + str(g.sell))
 
 def filter_stock(stock_pool,context):
   stocks = []
