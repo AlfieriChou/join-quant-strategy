@@ -180,7 +180,7 @@ def market_open(context):
   if len(g.sell) > 0:
     log.info('「卖入股票」：' + str(g.sell))
 
-def filter_stock(stock_pool,context):
+def filter_stock(stock_pool, context):
   stocks = []
   for st in stock_pool:
     if not st.startswith('300') and not st.startswith('688'):
@@ -198,5 +198,3 @@ def get_circulating_market_cap(stock_list, context):
   market_cap = get_fundamentals(q, context.previous_date)
   market_cap.set_index('code', inplace = True)
   return market_cap
-  
-    
