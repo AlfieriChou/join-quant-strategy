@@ -178,7 +178,7 @@ def market_open(context):
   if len(g.buy) > 0:
     log.info('「买入股票」：' + str(g.buy))
   if len(g.sell) > 0:
-    log.info('「卖入股票」：' + str(g.sell))
+    log.info('「卖出股票」：' + str(g.sell))
 
 def filter_stock(stock_pool, context):
   stocks = []
