@@ -100,7 +100,8 @@ def get_buy_sell(context):
 ## 开盘前运行函数
 def before_open(context):
   # year1 =context.previous_date.year-1#去年
-  if context.previous_date.year != g.year:###每年选一次股票，选出营收，每股收益5年正
+  ###每年选一次股票，选出营收，每股收益5年正
+  if context.previous_date.year != g.year:
     stocks = list(
       get_all_securities(types = ['stock'], date = context.previous_date).index
     )
@@ -124,7 +125,7 @@ def get_report(context):
     finance.STK_FIN_FORCAST.code.in_(g.stocks)))['code']
   )
   g.buy_mouth['date'] = g.buy_mouth['date'] + 1
-  # print('before',g.buy_mouth)
+  # print('before', g.buy_mouth)
   g.buy_mouth = g.buy_mouth[g.buy_mouth['date'] <= 30]#一个月内业绩预告，超过就删除
   buy_mouth = pd.DataFrame(columns = ['date'])
   for st in stock:
@@ -132,7 +133,7 @@ def get_report(context):
     buy_mouth.loc[st] = 1
   # print(buy_mouth)
   g.buy_mouth = g.buy_mouth.append(buy_mouth)
-  # print('after',g.buy_mouth)
+  # print('after', g.buy_mouth)
 
 def get_factor_filter_list(context, stock_list, jqfactor):
   yesterday = context.previous_date
@@ -147,7 +148,7 @@ def get_factor_filter_list(context, stock_list, jqfactor):
   df['score'] = score_list
   df = df.dropna()
   df = df[df['score'] > 0]
-  # df.sort_values(by='score', ascending=sort, inplace=True)
+  # df.sort_values(by = 'score', ascending = sort, inplace = True)
   filter_list = list(df.code)
   return filter_list
 
