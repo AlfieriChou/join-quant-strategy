@@ -44,7 +44,7 @@ def set_params(context):
   g.stocks_num = 1
   g.zscore_window = 60  # zscore窗口
   g.ma_window5 = 5  # 均线窗口
-  g.ma_window22 = 22  # 均线窗口
+  g.ma_window30 = 30  # 均线窗口
   log.set_level('order', 'error')
   g.year = 1
   g.stocks = []
@@ -54,7 +54,7 @@ def set_params(context):
 def get_buy_sell(context):
   #stock_list = get_index_stocks('000016.XSHG')[:10]
   yesterday = context.current_dt - datetime.timedelta(1)  # 昨天
-  count = g.zscore_window + g.ma_window22 - 1  # 2个窗口数和
+  count = g.zscore_window + g.ma_window30 - 1  # 2个窗口数和
   
   data = get_current_data()  # 当前时间数据
   buy, sell = [], []
@@ -70,12 +70,12 @@ def get_buy_sell(context):
       single_df.close,
       window = g.ma_window5
     ).mean()  # 均线
-    single_df['ma22'] = pd.Series.rolling(
+    single_df['ma30'] = pd.Series.rolling(
       single_df.close,
-      window = g.ma_window22
+      window = g.ma_window30
     ).mean()  # 均线
     single_df.dropna(inplace = True)
-    single_df['sub'] = single_df.ma5 - single_df.ma22  # 对差值进行回归
+    single_df['sub'] = single_df.ma5 - single_df.ma30  # 对差值进行回归
     
     zscore_mean = single_df['sub'].mean();
     zscore_std = single_df['sub'].std()  # 均值和标准差
