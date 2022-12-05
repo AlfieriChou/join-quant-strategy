@@ -26,7 +26,7 @@ def initialize(context):
   # 运行时间
   run_daily(
     before_open,
-    time = '08:00',
+    time = '21:00',
     reference_security = '000300.XSHG'
   )
   run_daily(
@@ -110,12 +110,13 @@ def before_open(context):
     stocks = list(
       get_all_securities(types = ['stock'], date = context.previous_date).index
     )
-    stocks = filter_stock(stocks,context)
-    # stocks = get_factor_value(stocks,['earnings_growth','sales_growth'],end_date = context.previous_date,count =1)
+    stocks = filter_stock(stocks, context)
+    # stocks = get_factor_value(stocks, ['earnings_growth', 'sales_growth'], end_date = context. previous_date, count =1)
     stocks = get_factor_filter_list(context,stocks,'earnings_growth')
     g.stocks = get_factor_filter_list(context,stocks,'sales_growth')
     g.year = context.previous_date.year
-    print('one year',len(g.stocks))
+    print('one year', len(g.stocks), g.stocks)
+    log.info('「符合营收，每股收益5年正的标」：' + str(g.stocks))
   get_report(context)
   g.buy, g.sell = get_buy_sell(context)
 
