@@ -100,6 +100,12 @@ def get_buy_sell(context):
       sell.append(st)
     if context.portfolio.positions[st].price < context.portfolio.positions[st].avg_cost * 0.9:
       sell.append(st)
+  
+  if len(g.buy) > 0:
+    log.info('「预买入股票」：' + str(buy))
+  if len(g.sell) > 0:
+    log.info('「预卖出股票」：' + str(sell))
+  
   return buy, sell
 
 ## 开盘前运行函数
