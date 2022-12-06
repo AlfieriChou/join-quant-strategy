@@ -8,6 +8,10 @@ from jqfactor import get_factor_values
 
 # 初始化函数，设定基准等等
 def initialize(context):
+
+  g.purchases = []
+  g.sells = []
+
   # 设定沪深300作为基准
   set_benchmark('000300.XSHG')
   # 开启动态复权模式(真实价格)
@@ -26,7 +30,7 @@ def initialize(context):
   # 运行时间
   run_daily(
     before_open,
-    time = '1:00',
+    time = '21:00',
     reference_security = '000300.XSHG'
   )
   run_daily(
@@ -53,7 +57,7 @@ def set_params(context):
 # 获取当天买卖股票
 def get_buy_sell(context):
   #stock_list = get_index_stocks('000016.XSHG')[:10]
-  yesterday = context.current_dt - datetime.timedelta(1)  # 昨天
+  currentAt = context.current_dt  # 当天
   count = g.zscore_window + g.ma_window30 - 1  # 2个窗口数和
   
   data = get_current_data()  # 当前时间数据
@@ -65,7 +69,7 @@ def get_buy_sell(context):
   for code in list(g.buy_mouth.index):
     if data[code].paused:  # 跳过停牌股
       continue
-    single_df = get_price(code, end_date = yesterday, fields = 'close', count = count)
+    single_df = get_price(code, end_date = currentAt, fields = 'close', count = count)
     single_df['ma5'] = pd.Series.rolling(
       single_df.close,
       window = g.ma_window5
@@ -118,13 +122,15 @@ def before_open(context):
     )
     stocks = filter_stock(stocks, context)
     # stocks = get_factor_value(stocks, ['earnings_growth', 'sales_growth'], end_date = context. previous_date, count =1)
-    stocks = get_factor_filter_list(context,stocks,'earnings_growth')
-    g.stocks = get_factor_filter_list(context,stocks,'sales_growth')
+    stocks = get_factor_filter_list(context, stocks, 'earnings_growth')
+    g.stocks = get_factor_filter_list(context, stocks, 'sales_growth')
     g.year = context.previous_date.year
     print('one year', len(g.stocks))
     print('「符合营收，每股收益5年正的标」：', str(g.stocks))
   get_report(context)
   g.buy, g.sell = get_buy_sell(context)
+  g.purchases = g.buy
+  g.sells = g.sell
 
 #305001	业绩大幅上升 305002	业绩预增 305004	预计扭亏 305009	大幅减亏
 def get_report(context):
@@ -167,10 +173,10 @@ def get_factor_filter_list(context, stock_list, jqfactor):
 ## 开盘时运行函数
 def market_open(context):
   # 先卖
-  for code in g.sell:
+  for code in g.sells:
     order_target(code, 0)
   # 再买
-  n = len(g.buy)
+  n = len(g.purchases)
   hold = len(context.portfolio.positions)
   if n + hold <= g.maxnum and n > 0 and hold < g.maxnum:
     cash_per_stock = context.portfolio.available_cash / n
@@ -178,7 +184,7 @@ def market_open(context):
     cash_per_stock = context.portfolio.available_cash / (g.maxnum - hold)
   else:
     cash_per_stock = 0
-  for code in g.buy:
+  for code in g.purchases:
       
     # 未达到最大持仓数
     if hold < g.maxnum:
@@ -187,11 +193,11 @@ def market_open(context):
         order_target_value(code, cash_per_stock)
       else:
         break
-  print('buy: %d  sell: %d  hold: %d' % (len(g.buy), len(g.sell), len(context.portfolio.positions)))
-  if len(g.buy) > 0:
-    log.info('「买入股票」：' + str(g.buy))
-  if len(g.sell) > 0:
-    log.info('「卖出股票」：' + str(g.sell))
+  print('buy: %d  sell: %d  hold: %d' % (len(g.purchases), len(g.sells), len(context.portfolio.positions)))
+  if len(g.purchases) > 0:
+    log.info('「买入股票」：' + str(g.purchases))
+  if len(g.sells) > 0:
+    log.info('「卖出股票」：' + str(g.sells))
 
 def filter_stock(stock_pool, context):
   stocks = []
