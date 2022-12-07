@@ -125,8 +125,7 @@ def before_open(context):
     stocks = get_factor_filter_list(context, stocks, 'earnings_growth')
     g.stocks = get_factor_filter_list(context, stocks, 'sales_growth')
     g.year = context.previous_date.year
-    print('one year', len(g.stocks))
-    print('「符合营收，每股收益5年正的标」：', str(g.stocks))
+    print('「符合营收，每股收益5年正的标」：', len(g.stocks))
   get_report(context)
   g.buy, g.sell = get_buy_sell(context)
   g.purchases = g.buy
