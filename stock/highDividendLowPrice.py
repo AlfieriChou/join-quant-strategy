@@ -1,4 +1,4 @@
-// 高股息低股价
+# 高股息低股价
 import pandas as pd
 from jqdata import *
 # from jqfactor import get_factor_values
@@ -60,8 +60,7 @@ def go_Trader(context):
           break
               
 def cap(context):
-  #获取日期
-  current_data = get_current_data()
+  current_data = get_current_data() # 获取日期
   hold_stocks = context.portfolio.positions.keys()
   for s in hold_stocks:
     q = query(valuation).filter(valuation.code == s)
@@ -174,8 +173,7 @@ def check_limit_up(context):
         order_target(stock, 0)
       else:
         log.info("[%s]涨停，继续持有" % stock)
- 
- 
+
 # 过滤科创北交股票
 def filter_kcbj_stock(stock_list):
   for stock in stock_list[:]:
@@ -188,16 +186,14 @@ def filter_paused_stock(stock_list):
 	current_data = get_current_data()
 	return [stock for stock in stock_list if not current_data[stock].paused]
 
-
 # 过滤ST及其他具有退市标签的股票
 def filter_st_stock(stock_list):
-current_data = get_current_data()
-return [stock for stock in stock_list
-  if not current_data[stock].is_st
-  and 'ST' not in current_data[stock].name
-  and '*' not in current_data[stock].name
-  and '退' not in current_data[stock].name]
-
+  current_data = get_current_data()
+  return [stock for stock in stock_list
+    if not current_data[stock].is_st
+    and 'ST' not in current_data[stock].name
+    and '*' not in current_data[stock].name
+    and '退' not in current_data[stock].name]
 
 # 过滤涨停的股票
 def filter_limitup_stock(context, stock_list):
@@ -220,4 +216,4 @@ def filter_limitdown_stock(context, stock_list):
 def filter_highprice_stock(context,stock_list):
 	last_prices = history(1, unit='1m', field='close', security_list=stock_list)
 	return [stock for stock in stock_list if stock in context.portfolio.positions.keys()
-		or (last_prices[stock][-1] < 9]
+		or (last_prices[stock][-1] > 9 and last_prices[stock][-1] < 25)]
