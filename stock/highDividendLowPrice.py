@@ -12,15 +12,15 @@ def initialize(context):
   # 设置滑点为理想情况，纯为了跑分好看，实际使用注释掉为好
   set_slippage(PriceRelatedSlippage(0.000))
   # 设置交易成本
-  set_order_cost(OrderCost(open_tax=0, close_tax=0.0001, open_commission=0.0003, close_commission=0.0003, close_today_commission=0, min_commission=5),type='fund')
+  set_order_cost(OrderCost(open_tax = 0, close_tax = 0.0001, open_commission = 0.0003, close_commission = 0.0003, close_today_commission = 0, min_commission = 5), type = 'fund')
   # strategy
   g.stock_num = 10
   g.choice = []
-  run_daily(prepare_stock_list, time='9:05', reference_security='000300.XSHG')
-  run_monthly(my_Trader, 1 ,time='9:30')
-  run_monthly(go_Trader, 1 ,time='14:55')
-  run_monthly(cap, 1 ,time='16:00')
-  run_daily(check_limit_up, time='14:00')
+  run_daily(prepare_stock_list, time='9:05', reference_security = '000300.XSHG')
+  run_monthly(my_Trader, 1 ,time = '9:30')
+  run_monthly(go_Trader, 1 ,time = '14:55')
+  run_monthly(cap, 1 ,time = '16:00')
+  run_daily(check_limit_up, time = '14:00')
 
 def my_Trader(context):
   #1 all stocks
@@ -34,10 +34,11 @@ def my_Trader(context):
   #4 各种过滤
   choice = filter_st_stock(stocks)
   choice = filter_paused_stock(choice)
-  choice = filter_limitup_stock(context,choice)
-  choice = filter_limitdown_stock(context,choice)
+  choice = filter_limitup_stock(context, choice)
+  choice = filter_limitdown_stock(context, choice)
+  # todo: 添加DMA回归策略
   #5 低价股
-  choice = filter_highprice_stock(context,choice)
+  choice = filter_highprice_stock(context, choice)
   g.choice = choice[:g.stock_num]
   
 def go_Trader(context):
@@ -45,13 +46,13 @@ def go_Trader(context):
   choice = g.choice
   # Sell
   for s in context.portfolio.positions:
-    if (s  not in choice) :
+    if (s  not in choice):
       log.info('Sell', s, cdata[s].name)
       order_target(s, 0)
   # buy
   position_count = len(context.portfolio.positions)
   if g.stock_num > position_count:
-    psize = context.portfolio.available_cash/(g.stock_num - position_count)
+    psize = context.portfolio.available_cash / (g.stock_num - position_count)
     for s in choice:
       if s not in context.portfolio.positions:
         log.info('buy', s, cdata[s].name)
@@ -65,20 +66,20 @@ def cap(context):
   for s in hold_stocks:
     q = query(valuation).filter(valuation.code == s)
     df = get_fundamentals(q)
-    # log.info(s,current_data[s].name,'流值',df['circulating_market_cap'][0],'亿')
-    log.info(s,current_data[s].name,'市值',df['market_cap'][0],'亿')
-    log.info(s,current_data[s].name,'股价',current_data[s].last_price,'元')
+    # log.info(s, current_data[s].name, '流值', df['circulating_market_cap'][0], '亿')
+    log.info(s, current_data[s].name, '市值', df['market_cap'][0], '亿')
+    log.info(s, current_data[s].name, '股价', current_data[s].last_price, '元')
 
 def get_peg(context,stocks):
   # 获取基本面数据
   q = query(
     valuation.code,
-    valuation.pe_ratio / indicator.inc_net_profit_year_on_year,# PEG
+    valuation.pe_ratio / indicator.inc_net_profit_year_on_year, # PEG
     indicator.roe / valuation.pb_ratio, # PB-ROE  收益率指标：ROE/PB特别适合于周期类、成长性一般企业的估值分析
     indicator.roe,
   ).filter(
-    valuation.pe_ratio / indicator.inc_net_profit_year_on_year>-3,
-    valuation.pe_ratio / indicator.inc_net_profit_year_on_year<3,
+    valuation.pe_ratio / indicator.inc_net_profit_year_on_year > -3,
+    valuation.pe_ratio / indicator.inc_net_profit_year_on_year < 3,
     # indicator.roe / valuation.pb_ratio > 3.2,   #国债收益率
     valuation.code.in_(stocks)
   )
@@ -95,7 +96,7 @@ def get_peg(context,stocks):
 #1-1 根据最近一年分红除以当前总市值计算股息率并筛选    
 def get_dividend_ratio_filter_list(context, stock_list, sort, p1, p2):
   time1 = context.previous_date
-  time0 = time1 - datetime.timedelta(days=365)
+  time0 = time1 - datetime.timedelta(days = 365)
   #获取分红数据，由于finance.run_query最多返回4000行，以防未来数据超限，最好把stock_list拆分后查询再组合
   interval = 1000 #某只股票可能一年内多次分红，导致其所占行数大于1，所以interval不要取满4000
   list_len = len(stock_list)
@@ -121,7 +122,7 @@ def get_dividend_ratio_filter_list(context, stock_list, sort, p1, p2):
       ).filter(
         finance.STK_XR_XD.a_registration_date >= time0,
         finance.STK_XR_XD.a_registration_date <= time1,
-        finance.STK_XR_XD.code.in_(stock_list[interval*(i+1):min(list_len,interval*(i+2))])
+        finance.STK_XR_XD.code.in_(stock_list[interval * (i + 1):min(list_len, interval * (i + 2))])
       )
       temp_df = finance.run_query(q)
       df = df.append(temp_df)
@@ -140,10 +141,10 @@ def get_dividend_ratio_filter_list(context, stock_list, sort, p1, p2):
   cap = cap.set_index('code')
   #计算股息率
   DR = pd.concat([dividend, cap] ,axis = 1, sort = False)
-  DR['dividend_ratio'] = (DR['bonus_amount_rmb']/10000) / DR['market_cap']
+  DR['dividend_ratio'] = (DR['bonus_amount_rmb'] / 10000) / DR['market_cap']
   #排序并筛选
   DR = DR.sort_values(by = ['dividend_ratio'], ascending = sort)
-  final_list = list(DR.index)[int(p1*len(DR)):int(p2*len(DR))]
+  final_list = list(DR.index)[int(p1 * len(DR)):int(p2 * len(DR))]
   return final_list
     
 # 准备股票池
@@ -197,7 +198,7 @@ def filter_st_stock(stock_list):
 
 # 过滤涨停的股票
 def filter_limitup_stock(context, stock_list):
-	last_prices = history(1, unit='1m', field='close', security_list=stock_list)
+	last_prices = history(1, unit = '1m', field = 'close', security_list = stock_list)
 	current_data = get_current_data()
 	
 	# 已存在于持仓的股票即使涨停也不过滤，避免此股票再次可买，但因被过滤而导致选择别的股票
@@ -206,7 +207,7 @@ def filter_limitup_stock(context, stock_list):
 
 # 过滤跌停的股票
 def filter_limitdown_stock(context, stock_list):
-	last_prices = history(1, unit='1m', field='close', security_list=stock_list)
+	last_prices = history(1, unit = '1m', field = 'close', security_list = stock_list)
 	current_data = get_current_data()
 	
 	return [stock for stock in stock_list if stock in context.portfolio.positions.keys()
@@ -214,6 +215,6 @@ def filter_limitdown_stock(context, stock_list):
 
 #2-4 过滤股价高于9元的股票	
 def filter_highprice_stock(context,stock_list):
-	last_prices = history(1, unit='1m', field='close', security_list=stock_list)
+	last_prices = history(1, unit = '1m', field = 'close', security_list = stock_list)
 	return [stock for stock in stock_list if stock in context.portfolio.positions.keys()
 		or (last_prices[stock][-1] > 9 and last_prices[stock][-1] < 25)]
