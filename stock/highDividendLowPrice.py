@@ -179,7 +179,7 @@ def check_limit_up(context):
 # 过滤科创北交股票
 def filter_kcbj_stock(stock_list):
   for stock in stock_list[:]:
-    if stock[0] == '4' or stock[0] == '8' or stock[:2] == '68':
+    if stock[0] == '4' or stock[0] == '8' or stock[:3] == '688' or stock[:3] == '300':
       stock_list.remove(stock)
   return stock_list
 
