@@ -375,7 +375,7 @@ def filter_limitdown_stock(context, stock_list):
 
 #2-6 过滤科创板
 def filter_kcb_stock(context, stock_list):
-  return [stock for stock in stock_list  if stock[0:3] != '688']
+  return [stock for stock in stock_list  if stock[0:3] != '688' and stock[0:3] != '300']
 
 #2-7 过滤次新股
 def filter_new_stock(context,stock_list):
