@@ -31,7 +31,7 @@ def set_backtest():
   # 开启动态复权模式(真实价格)
   set_option('use_real_price', True)
   # 设置日志记录订单和报错
-  log.set_level('order','error')
+  log.set_level('order', 'error')
 
 # 设置交易函数
 def trade(context):
@@ -61,22 +61,22 @@ def trade(context):
       valuation.code.in_(stocks)
     )
     # 数据表格化
-    df = get_fundamentals(q,date = None)
+    df = get_fundamentals(q, date = None)
     # 加表头
     df.columns = ['code', 'market_cap', 'na', '1/DA_ratio', 'net_profit', 'growth', 'RD']
     # 模型训练
     df.index = df['code'].values
     # print(df.index)
     # 删除首行         
-    df = df.drop('code',axis = 1)
+    df = df.drop('code', axis = 1)
     df = df.fillna(0)
-    X = df.drop('market_cap',axis = 1)
+    X = df.drop('market_cap', axis = 1)
     y = df['market_cap']
     # 0填充表中的空值
     X =  X.fillna(0)
     y = y.fillna(0)
     # 线性拟合
-    reg = LinearRegression().fit(X,y)
+    reg = LinearRegression().fit(X, y)
     #　模型预测值输入预测表内
     predict = pd.DataFrame(
       reg.predict(X),
@@ -98,11 +98,12 @@ def trade(context):
       if stock not in stockset[:g.stocknum]:
         stock_sell = stock
         # 清仓
-        order_target_value(stock_sell,0)
+        log.info('「卖出股票」：' + str(stock_sell))
+        order_target_value(stock_sell, 0)
             
-    if len(context.portfolio.positions) <g.stocknum:
+    if len(context.portfolio.positions) < g.stocknum:
       num = g.stocknum - len(context.portfolio.positions)
-      cash = context.portfolio.cash/num 
+      cash = context.portfolio.cash / num 
     else:
       cash = 0
       num = 0 
@@ -114,6 +115,7 @@ def trade(context):
         pass
       else:
         stock_buy = stock
+        log.info('「买入股票」：' + str(stock_buy))
         order_target_value(stock_buy, cash)
         num = num - 1
         if num == 0:
