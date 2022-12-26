@@ -378,9 +378,9 @@ def filter_kcb_stock(context, stock_list):
   return [stock for stock in stock_list  if stock[0:3] != '688' and stock[0:3] != '300']
 
 #2-7 过滤次新股
-def filter_new_stock(context,stock_list):
+def filter_new_stock(context, stock_list):
   yesterday = context.previous_date
-  return [stock for stock in stock_list if not yesterday - get_security_info(stock).start_date < datetime.timedelta(days=375)]
+  return [stock for stock in stock_list if not yesterday - get_security_info(stock).start_date < datetime.timedelta(days = 375)]
 
 #3-1 交易模块-自定义下单
 def order_target_value_(security, value):
