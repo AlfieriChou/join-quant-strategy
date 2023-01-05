@@ -136,7 +136,7 @@ def get_report(context):
   stock = list(
     finance.run_query(
       query(finance.STK_FIN_FORCAST.code)
-        .filter(finance.STK_FIN_FORCAST.type_id.in_([305001,305002,305004,305009]
+        .filter(finance.STK_FIN_FORCAST.type_id.in_([305001, 305002, 305004, 305009]
     ),
     finance.STK_FIN_FORCAST.pub_date == context.previous_date,
     finance.STK_FIN_FORCAST.code.in_(g.stocks)))['code']

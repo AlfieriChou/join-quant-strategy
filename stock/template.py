@@ -17,6 +17,7 @@ def initialize(context):
     #选股参数
     g.stock_num = 3 #持仓数
     g.percentile = 0.25 #选股百分比
+    g.buy_mouth = pd.DataFrame(columns = ['date'])
     # 设置交易时间，每天运行
     run_daily(my_trade, time = '9:30', reference_security = '000300.XSHG')
     run_daily(print_trade_info, time = '15:30', reference_security = '000300.XSHG')
@@ -38,19 +39,35 @@ def get_factor_filter_list(context, stock_list, jqfactor, p1, p2):
   filter_list = list(df.code)[int(p1*len(stock_list)):int(p2*len(stock_list))]
   return filter_list
 
+# 2-8 过滤业绩预期 305001-业绩大幅上升 305002-业绩预增 305004-预计扭亏 305009-大幅减亏
+def filter_by_report(context, stock_list):
+  stock = list(
+    finance.run_query(
+      query(finance.STK_FIN_FORCAST.code)
+        .filter(finance.STK_FIN_FORCAST.type_id.in_([305001, 305002, 305004, 305009]
+    ),
+    finance.STK_FIN_FORCAST.pub_date == context.previous_date,
+    finance.STK_FIN_FORCAST.code.in_(stock_list)))['code']
+  )
+  df = pd.DataFrame(columns = ['code'])
+  df['code'] = stock
+  df.dropna(inplace = True)
+  filter_list = list(df.code)
+  return filter_list
+
 #1-2 选股模块
 def get_stock_list(context):
   initial_list = get_all_securities().index.tolist()
   initial_list = filter_kcbj_stock(initial_list)
   initial_list = filter_st_stock(initial_list)
-  initial_list = filter_new_stock(context, initial_list, 250) 
+  initial_list = filter_new_stock(context, initial_list, 250)
   eps_list = get_factor_filter_list(context, initial_list, 'eps_ttm', 0, 0.25)
   ms_list = get_factor_filter_list(context, eps_list, 'margin_stability', 0, 0.25)
-  q = query(valuation.code)
-    .filter(valuation.code.in_(ms_list))
-    .order_by(valuation.circulating_market_cap.desc())
+  q = query(valuation.code).filter(valuation.code.in_(ms_list)).order_by(valuation.circulating_market_cap.desc())
   final_list = list(get_fundamentals(q).code)
-  return final_list
+  report_list = filter_by_report(context, final_list)
+  log.info('「预处理股票」：' + str(report_list))
+  return report_list
 
 #2-1 过滤停牌股票
 def filter_paused_stock(stock_list):
