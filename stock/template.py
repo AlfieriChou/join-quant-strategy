@@ -15,14 +15,14 @@ def initialize(context):
     # 过滤order中低于error级别的日志
     log.set_level('order', 'error')
     #选股参数
-    g.stock_num = 5 #持仓数
+    g.stock_num = 3 #持仓数
     g.percentile = 0.25 #选股百分比
     # 设置交易时间，每天运行
     run_daily(my_trade, time = '9:30', reference_security = '000300.XSHG')
     run_daily(print_trade_info, time = '15:30', reference_security = '000300.XSHG')
 
 #2-1 选股模块
-def get_factor_filter_list(context,stock_list,jqfactor, p1, p2):
+def get_factor_filter_list(context, stock_list, jqfactor, p1, p2):
   yesterday = context.previous_date
   score_list = get_factor_values(
     stock_list,
@@ -30,7 +30,7 @@ def get_factor_filter_list(context,stock_list,jqfactor, p1, p2):
     end_date = yesterday,
     count = 1
   )[jqfactor].iloc[0].tolist()
-  df = pd.DataFrame(columns = ['code','score'])
+  df = pd.DataFrame(columns = ['code', 'score'])
   df['code'] = stock_list
   df['score'] = score_list
   df.dropna(inplace = True)
@@ -46,7 +46,9 @@ def get_stock_list(context):
   initial_list = filter_new_stock(context, initial_list, 250) 
   eps_list = get_factor_filter_list(context, initial_list, 'eps_ttm', 0, 0.25)
   ms_list = get_factor_filter_list(context, eps_list, 'margin_stability', 0, 0.25)
-  q = query(valuation.code).filter(valuation.code.in_(ms_list)).order_by(valuation.circulating_market_cap.desc())
+  q = query(valuation.code)
+    .filter(valuation.code.in_(ms_list))
+    .order_by(valuation.circulating_market_cap.desc())
   final_list = list(get_fundamentals(q).code)
   return final_list
 
