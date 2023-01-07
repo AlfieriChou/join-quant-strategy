@@ -170,6 +170,24 @@ def ETF_trade(context):
       log.info('买入: %s' % code)
       order_target(code,g.df_etf[g.df_etf['基金代码'] == code]['股数'].values)
 
+# dma
+def get_dma(security, start_date = None, end_date = None, count = 1, n1 = 5, n2 = 30, m = 5):
+    price = get_price(
+      security = security, 
+      start_date = start_date, 
+      end_date = end_date,
+      frequency = 'daily', 
+      fields = None, 
+      skip_paused = False, 
+      count = count + n2 + m,
+      fq = 'pre'
+    )
+    ma1 = price['close'].rolling(n1).mean()
+    ma2 = price['close'].rolling(n2).mean()
+    DMA = ma1 - ma2
+    AMA = DMA.rolling(m).mean()
+    return DMA[-count:].values, AMA[-count:].values
+
 # 获取信号
 def get_signal(context):
    
@@ -201,11 +219,13 @@ def get_signal(context):
     previous_close = price_data['close'][-g.moment_period]
     
     # 计算均线
-    ddd = ta.SMA(price_data.close.values, g.ma_period)[-1]
-    ddd_ma = ta.SMA(price_data.close.values, g.moment_period)[-1]
+    DMA, AMA = get_dma(security, end_date = current_time, count = 1, n1 = g.ma_period, n2 = g.moment_period, m = g.ma_period)
+
+    log.info('[test]: dif ' + str(DMA))
+    log.info('[test]: dif_ma1 ' + str(AMA))
     
     # 计算动量
-    ma_status = ddd - ddd_ma    # '均线状态'
+    ma_status = DMA[-1] - AMA[-1]     # '均线状态'
     moment = (now_close - previous_close) / previous_close * 100   #'涨幅'
 
     # 计算持仓数量
