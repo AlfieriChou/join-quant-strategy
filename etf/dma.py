@@ -37,7 +37,7 @@ def initialize(context):
   # 21:00 计算交易信号
   run_daily(get_signal, time = '21:00')
   # 9:35 进行交易
-  run_weekly(ETF_trade, 1, time = '9:35')
+  run_daily(ETF_trade, time = '9:35')
 
 
 # 设置参数
@@ -45,10 +45,10 @@ def set_params():
 
   g.target_market = '000300.XSHG'
   
-  g.moment_period = 9                # 计算行情趋势的短期均线
-  g.ma_period = 10                    # 计算行情趋势的长期均线
+  g.moment_period = 30                 # 计算行情趋势的短期均线
+  g.ma_period = 5                      # 计算行情趋势的长期均线
   
-  g.type_num = 5    # 品种数量
+  g.type_num = 3    # 品种数量
 
   g.ETF_targets =  {
     # # A股指数ETF
@@ -73,7 +73,7 @@ def set_params():
     '561560.XSHG':'561560.XSHG',        # 电力
     
     # # 全球股指
-    # '513100.XSHG':'513100.XSHG',        # 纳斯达克ETF
+    '513100.XSHG':'513100.XSHG',        # 纳斯达克ETF
     # '513080.XSHG':'513080.XSHG',        # 法国ETF
     # '513030.XSHG':'513030.XSHG',        # 德国ETF
     # '513520.XSHG':'513520.XSHG',        # 日经ETF
@@ -89,7 +89,7 @@ def set_params():
   ]
   # 全球股指
   g.global_stocks = [
-    # '513100.XSHG',        # 纳斯达克ETF
+    '513100.XSHG',        # 纳斯达克ETF
     # '513080.XSHG',        # 法国ETF
     # '513030.XSHG',        # 德国ETF
     # '513520.XSHG',        # 日经ETF
@@ -118,7 +118,7 @@ def set_params():
     stocks_info += "【%s】%s 上市日期:%s\n" % (s_info.code, s_info.display_name, s_info.start_date)
   log.info(stocks_info)
 
-def get_before_after_trade_days(date, count, is_before=True):
+def get_before_after_trade_days(date, count, is_before = True):
   """
   来自： https://www.joinquant.com/view/community/detail/c9827c6126003147912f1b47967052d9?type=1
   date :查询日期
@@ -145,7 +145,7 @@ def before_market_open(context):
   g.ETFList = {}
   
   #筛选品种，将上时间不足的品种排除
-  all_funds = get_all_securities(types='fund', date=yesterday)   # 上个交易日之前上市的所有基金
+  all_funds = get_all_securities(types = 'fund', date = yesterday)   # 上个交易日之前上市的所有基金
   
   for idx in g.ETF_targets:
 
@@ -201,10 +201,11 @@ def get_signal(context):
     previous_close = price_data['close'][-g.moment_period]
     
     # 计算均线
-    ma_filter = ta.MA(price_data.close.values, g.ma_period)[-1]
+    ddd = ta.SMA(price_data.close.values, g.ma_period)[-1]
+    ddd_ma = ta.SMA(price_data.close.values, g.moment_period)[-1]
     
     # 计算动量
-    ma_status = now_close - ma_filter    # '均线状态'
+    ma_status = ddd - ddd_ma    # '均线状态'
     moment = (now_close - previous_close) / previous_close * 100   #'涨幅'
 
     # 计算持仓数量
@@ -232,7 +233,7 @@ def get_signal(context):
   
   # 根据涨幅和均线状态筛选品种
   g.df_etf_buy = g.df_etf.copy()
-  g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['涨幅'] < 5]
+  # g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['涨幅'] < 5]
   g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['均线状态']  > 0]
   # 根据品种类别分为不同的DataFrame
   g.df_local_stocks = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.local_stocks)]
@@ -240,8 +241,8 @@ def get_signal(context):
   g.df_local_futures = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.local_futures)]
   g.df_global_futures = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.global_futures)]
   g.df_reits = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.REITs)]
-  
-    # 现在持仓的
+    
+  # 现在持仓的
   g.holdings = set(context.portfolio.positions.keys())
   g.targets = []
   

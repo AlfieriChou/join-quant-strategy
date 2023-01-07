@@ -61,9 +61,9 @@ def get_stock_list(context):
   initial_list = filter_kcbj_stock(initial_list)
   initial_list = filter_st_stock(initial_list)
   initial_list = filter_new_stock(context, initial_list, 250)
-  eps_list = get_factor_filter_list(context, initial_list, 'eps_ttm', 0, 0.25)
-  ms_list = get_factor_filter_list(context, eps_list, 'margin_stability', 0, 0.25)
-  q = query(valuation.code).filter(valuation.code.in_(ms_list)).order_by(valuation.circulating_market_cap.desc())
+  earnings_growth_list = get_factor_filter_list(context, initial_list, 'earnings_growth', 0, 1)
+  sales_growth_list = get_factor_filter_list(context, earnings_growth_list, 'sales_growth', 0, 1)
+  q = query(valuation.code).filter(valuation.code.in_(sales_growth_list)).order_by(valuation.circulating_market_cap.desc())
   final_list = list(get_fundamentals(q).code)
   report_list = filter_by_report(context, final_list)
   log.info('「预处理股票」：' + str(report_list))
@@ -185,8 +185,8 @@ def my_trade(context):
   #获取选股列表并过滤掉:st,st*,退市,涨停,跌停,停牌
   check_out_list = get_stock_list(context)
   check_out_list = filter_st_stock(check_out_list)
-  check_out_list = filter_limitup_stock(context, check_out_list)
-  check_out_list = filter_limitdown_stock(context, check_out_list)
+  # check_out_list = filter_limitup_stock(context, check_out_list)
+  # check_out_list = filter_limitdown_stock(context, check_out_list)
   check_out_list = filter_paused_stock(check_out_list)
   check_out_list = check_out_list[:g.stock_num]
   print('今日自选股:{}'.format(check_out_list))
