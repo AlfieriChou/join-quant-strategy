@@ -219,13 +219,15 @@ def get_signal(context):
     previous_close = price_data['close'][-g.moment_period]
     
     # 计算均线
-    DMA, AMA = get_dma(security, end_date = current_time, count = 1, n1 = g.ma_period, n2 = g.moment_period, m = g.ma_period)
-
-    log.info('[test]: dif ' + str(DMA))
-    log.info('[test]: dif_ma1 ' + str(AMA))
+    DMA, AMA = get_dma(security, end_date = current_time, count = 2, n1 = g.ma_period, n2 = g.moment_period, m = g.ma_period)
     
     # 计算动量
-    ma_status = DMA[-1] - AMA[-1]     # '均线状态'
+    ma_status = 0
+    if DMA[-2] < AMA[-2] and DMA[-1] > AMA[-1]:
+      ma_status = 1
+    elif DMA[-2] > AMA[-2] and DMA[-1] < AMA[-1]:
+      ma_status = -1
+    
     moment = (now_close - previous_close) / previous_close * 100   #'涨幅'
 
     # 计算持仓数量
@@ -247,21 +249,22 @@ def get_signal(context):
   tb.add_column('ETF Code', list(g.df_etf['基金代码']))
   tb.add_column('Name', list(g.df_etf['基金名称']))
   tb.add_column('Moment', list(g.df_etf['涨幅'].values.round(2)))
-  tb.add_column('Ma_Status', list(g.df_etf['均线状态'].values.round(2)))
+  tb.add_column('Ma_Status', list(g.df_etf['均线状态']))
   tb.add_column('Amount', list(g.df_etf['股数']))
   log.info('\n行情统计: \n%s' % tb)
   
   # 根据涨幅和均线状态筛选品种
+  # 买
   g.df_etf_buy = g.df_etf.copy()
   # g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['涨幅'] < 5]
-  g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['均线状态']  > 0]
+  g.df_etf_buy = g.df_etf_buy[g.df_etf_buy['均线状态']  == 1]
   # 根据品种类别分为不同的DataFrame
   g.df_local_stocks = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.local_stocks)]
   g.df_global_stocks = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.global_stocks)]
   g.df_local_futures = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.local_futures)]
   g.df_global_futures = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.global_futures)]
   g.df_reits = g.df_etf_buy.loc[g.df_etf_buy['基金代码'].isin(g.REITs)]
-    
+
   # 现在持仓的
   g.holdings = set(context.portfolio.positions.keys())
   g.targets = []
@@ -276,10 +279,35 @@ def get_signal(context):
       g.targets.append(g.df_global_futures.iloc[0]['基金代码'])
   if len(g.df_reits) > 0:
       g.targets.append(g.df_reits.iloc[0]['基金代码'])
+
+  # 卖
+  # 根据涨幅和均线状态筛选品种
+  g.df_etf_sells = g.df_etf.copy()
+  # g.df_etf_sells = g.df_etf_sells[g.df_etf_sells['涨幅'] < 5]
+  g.df_etf_sells = g.df_etf_sells[g.df_etf_sells['均线状态']  == -1]
+  # 根据品种类别分为不同的DataFrame
+  g.df_local_stocks_sells = g.df_etf_sells.loc[g.df_etf_sells['基金代码'].isin(g.local_stocks)]
+  g.df_global_stocks_sells = g.df_etf_sells.loc[g.df_etf_sells['基金代码'].isin(g.global_stocks)]
+  g.df_local_futures_sells = g.df_etf_sells.loc[g.df_etf_sells['基金代码'].isin(g.local_futures)]
+  g.df_global_futures_sells = g.df_etf_sells.loc[g.df_etf_sells['基金代码'].isin(g.global_futures)]
+  g.df_reits_sells = g.df_etf_sells.loc[g.df_etf_sells['基金代码'].isin(g.REITs)]
+
+  g.sell_list = []
+  
+  if len(g.df_local_stocks_sells) > 0:
+      g.sell_list.append(g.df_local_stocks_sells.iloc[0]['基金代码'])
+  if len(g.df_global_stocks_sells) > 0:
+      g.sell_list.append(g.df_global_stocks_sells.iloc[0]['基金代码'])
+  if len(g.df_local_futures_sells) > 0:
+      g.sell_list.append(g.df_local_futures_sells.iloc[0]['基金代码'])
+  if len(g.df_global_futures_sells) > 0:
+      g.sell_list.append(g.df_global_futures_sells.iloc[0]['基金代码'])
+  if len(g.df_reits_sells) > 0:
+      g.sell_list.append(g.df_reits_sells.iloc[0]['基金代码'])
   
   content = '交易计划：\n'
           
-  g.sells = [i for i in g.holdings if i not in (g.targets)]
+  g.sells = [i for i in g.holdings if i in (g.sell_list)]
   g.purchases = [i for i in g.targets if i not in (list(g.holdings))] 
   
   # 1. 卖出不在targets中的
