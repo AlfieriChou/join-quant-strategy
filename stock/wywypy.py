@@ -252,7 +252,14 @@ def prepare_stock_list(context):
   g.not_buy_again_list = list(temp_set)
   #获取昨日涨停列表
   if g.hold_list != []:
-    df = get_price(g.hold_list, end_date = context.previous_date, frequency = 'daily', fields = ['close','high_limit'], count = 1)
+    df = get_price(
+      g.hold_list,
+      end_date = context.previous_date,
+      frequency = 'daily',
+      fields = ['close','high_limit'],
+      count = 1,
+      panel = False
+    )
     close_df = df['close']
     high_limit_df = df['high_limit']
     diff_df = close_df - high_limit_df
@@ -350,7 +357,14 @@ def filter_st_stock(stock_list):
 
 #2-3 获取最近N个交易日内有涨停的股票
 def get_recent_limit_up_stock(stock_list, end_date, recent_days):
-  panel = get_price(stock_list, end_date = end_date, frequency = 'daily', fields = ['close','high_limit'], count = recent_days + 1)
+  panel = get_price(
+    stock_list,
+    end_date = end_date,
+    frequency = 'daily',
+    fields = ['close','high_limit'],
+    count = recent_days + 1,
+    panel = False
+  )
   if_high_limit = panel['high_limit'].iloc[-recent_days:]
   close_price = panel['close'].iloc[-recent_days:]
   diff_df = if_high_limit - close_price
