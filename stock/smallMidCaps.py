@@ -4,8 +4,6 @@ from jqfactor import *
 import numpy as np
 import pandas as pd
 
-
-
 #初始化函数 
 def initialize(context):
   # 设定基准
@@ -106,9 +104,7 @@ def get_stock_list(context):
     ascending = False
   )
   complex_factor_list = list(df.index)[:int(0.1*len(list(df.index)))]
-  q = query(valuation.code, valuation.circulating_market_cap, indicator.eps)
-    .filter(valuation.code.in_(complex_factor_list))
-    .order_by(valuation.circulating_market_cap.asc())
+  q = query(valuation.code, valuation.circulating_market_cap, indicator.eps).filter(valuation.code.in_(complex_factor_list)).order_by(valuation.circulating_market_cap.asc())
   df = get_fundamentals(q)
   df = df[df['eps']>0]
   final_list  = list(df.code)
@@ -234,23 +230,23 @@ def close_position(position):
 
 #4-1 打印每日持仓信息
 def print_position_info(context):
-    #打印当天成交记录
-    trades = get_trades()
-    for _trade in trades.values():
-      print('成交记录：'+str(_trade))
-    #打印账户信息
-    for position in list(context.portfolio.positions.values()):
-      securities=position.security
-      cost=position.avg_cost
-      price=position.price
-      ret=100*(price/cost-1)
-      value=position.value
-      amount=position.total_amount    
-      print('代码:{}'.format(securities))
-      print('成本价:{}'.format(format(cost,'.2f')))
-      print('现价:{}'.format(price))
-      print('收益率:{}%'.format(format(ret,'.2f')))
-      print('持仓(股):{}'.format(amount))
-      print('市值:{}'.format(format(value,'.2f')))
-      print('———————————————————————————————————')
-    print('———————————————————————————————————————分割线————————————————————————————————————————')
+  #打印当天成交记录
+  trades = get_trades()
+  for _trade in trades.values():
+    print('成交记录：'+str(_trade))
+  #打印账户信息
+  for position in list(context.portfolio.positions.values()):
+    securities=position.security
+    cost=position.avg_cost
+    price=position.price
+    ret=100*(price/cost-1)
+    value=position.value
+    amount=position.total_amount    
+    print('代码:{}'.format(securities))
+    print('成本价:{}'.format(format(cost,'.2f')))
+    print('现价:{}'.format(price))
+    print('收益率:{}%'.format(format(ret,'.2f')))
+    print('持仓(股):{}'.format(amount))
+    print('市值:{}'.format(format(value,'.2f')))
+    print('———————————————————————————————————')
+  print('———————————————————————————————————————分割线————————————————————————————————————————')

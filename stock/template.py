@@ -119,7 +119,7 @@ def filter_limitdown_stock(context, stock_list):
 #2-6 过滤科创北交股票
 def filter_kcbj_stock(stock_list):
   for stock in stock_list[:]:
-    if stock[0] == '4' or stock[0] == '8' or stock[:2] == '68' or stock[:3] == '300':
+    if stock[0] == '4' or stock[0] == '8' or stock[:2] == '68' or stock[:2] == '30':
       stock_list.remove(stock)
   return stock_list
 
